@@ -37,7 +37,10 @@ function createFakeFS () {
             'js': {
                 'index.js': 'console.log("test")',
             },
-            'README.md': '## README\nlorum ipsum'
+            'README.md': '## README\nlorum ipsum',
+            'node_modules': {
+              'test-lib': {'index.js': 'test'}
+            }
         },
         'target': {}
     });
@@ -124,7 +127,6 @@ describe('maven-deploy', function () {
             assertWarFileToEqual(TEST_PKG_JSON.name + '-' + EXPECTED_VERSION + '.war');
         });
 
-
         it('should create an archive using target directory', function () {
             var targetDir = './target';
             var config = extend({targetDir: targetDir}, TEST_CONFIG);
@@ -133,8 +135,7 @@ describe('maven-deploy', function () {
             maven.package();
 
             assertWarFileToEqual(TEST_PKG_JSON.name + '.war', targetDir);
-        });
-
+        });        
     });
 
     describe('install', function () {
@@ -203,7 +204,7 @@ describe('maven-deploy', function () {
                 '-SNAPSHOT.war';
             var config = extend({}, TEST_CONFIG);
             config.finalName = '{name}-{version}';
-            
+
             maven.config(config);
             maven.install();
 
@@ -243,4 +244,16 @@ describe('maven-deploy', function () {
         });
     });
 
+    describe('file content', function () {
+        it('should ignore folders included in ignore property', function () {
+
+            maven.config(extend({ignore: ['node_modules']}, TEST_CONFIG));
+            maven.package();
+            var pathToWarFile = warFileIn();
+
+            var context = fs.readFileSync('./dist/' + pathToWarFile);
+            var zip = new JSZip(context);
+            assert.ok(!zip.file('node_modules/test-lib/index.js'));
+        });
+    });
 });

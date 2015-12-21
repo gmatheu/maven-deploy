@@ -14,6 +14,7 @@ const DEFAULT_CONFIG = {
     artifactId: '{name}',
     buildDir: 'dist',
     targetDir: 'dist',
+    ignore: [],
     finalName: '{name}',
     type: 'war',
     fileEncoding: 'utf-8',
@@ -26,6 +27,7 @@ validateConfig = defineOpts({
     classifier    : '?|string - the Maven optional classifier.',
     buildDir      : '?|string - build directory. default "' + DEFAULT_CONFIG.buildDir + '".',
     targetDir     : '?|string - were to create built artifact. default "' + DEFAULT_CONFIG.targetDir + '".',
+    ignore        : '?|array  - ignores files whose paths includes any item of this array. default "' + DEFAULT_CONFIG.ignore + '".',
     finalName     : '?|string - the final name of the file created when the built project is packaged. default "' +
                     DEFAULT_CONFIG.finalName + '"',
     type          : '?|string - "jar" or "war". default "' + DEFAULT_CONFIG.type + '".',
@@ -153,9 +155,20 @@ var maven = {
         if (typeof isSnapshot == 'function') { done = isSnapshot; isSnapshot = false; }
         var archive = new JSZip();
         var conf = getConfig(isSnapshot);
+        var ignore = function(base, file){
+          var patterns = conf.ignore;
+          var fullPath = base + '/' + file;
+          var shouldIgnore = false;
+          patterns.forEach(function(pattern) {
+            shouldIgnore |= fullPath.includes(pattern);
+          });
+          return shouldIgnore;
+        }
 
         walk.walkSync(conf.buildDir, function (base, file, stat) {
-            if (stat.isDirectory() || file.indexOf(conf.finalName + '.' + conf.type) === 0) {
+            if (stat.isDirectory() ||
+                file.indexOf(conf.finalName + '.' + conf.type) === 0 ||
+                ignore(base, file)) {
                 return;
             }
             var filePath = path.join(base, file);

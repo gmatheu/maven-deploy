@@ -19,6 +19,7 @@ package is put there before packaging. The default is `dist/`. The package file 
         "artifactId"   : "{name}",         // the Maven artifact id.
         "buildDir"     : "dist",           // project build directory.
         "targetDir"    : "dist",           // were to create the target package.
+        "ignore"       : [],               // ignores files whose paths includes any item of this array.
         "finalName"    : "{name}",         // the final name of the file created when the built project is packaged.
         "type"         : "war",            // type of package. "war" or "jar" supported.
         "fileEncoding" : "utf-8"           // file encoding when traversing the file system, default is UTF-8
