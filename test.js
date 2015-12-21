@@ -37,7 +37,10 @@ function createFakeFS () {
             'js': {
                 'index.js': 'console.log("test")',
             },
-            'README.md': '## README\nlorum ipsum'
+            'README.md': '## README\nlorum ipsum',
+            'node_modules': {
+              'test-lib': {'index.js': 'test'}
+            }
         }
     });
     return fakeFS;
@@ -227,4 +230,16 @@ describe('maven-deploy', function () {
         });
     });
 
+    describe('file content', function () {
+        it('should ignore folders included in ignore property', function () {
+
+            maven.config(extend({ignore: ['node_modules']}, TEST_CONFIG));
+            maven.package();
+            var pathToWarFile = warFileInDist();
+
+            var context = fs.readFileSync('./dist/' + pathToWarFile);
+            var zip = new JSZip(context);
+            assert.ok(!zip.file('node_modules/test-lib/index.js'));
+        });
+    });
 });
